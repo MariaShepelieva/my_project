@@ -6,20 +6,12 @@ import sys
 
 # шлях до батьківської директорії
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-<<<<<<< HEAD
 from src.work import EyeDataset
-=======
-from work import EyeDataset
->>>>>>> 0721a30 (PathLib and translate outputs to ukrainian)
 
 
 @pytest.fixture(scope="module")
 def dataset():
-<<<<<<< HEAD
     dataset_path = Path(__file__).parent.parent / "src" / "EyeDataset"
-=======
-    dataset_path = Path(r"C:/Coursework/EyeDataset")
->>>>>>> 0721a30 (PathLib and translate outputs to ukrainian)
     return EyeDataset(root_dir=dataset_path, image_size=(224, 224))
 
 
@@ -50,8 +42,7 @@ def test_dataloader(dataset):
 
 
 def test_multiple_images(dataset):
-    indices = [0, 5, 10] 
-    images = [dataset[i][0] for i in indices]
-
-    for img in images:
-        assert img.shape == (3, 224, 224), f"Помилка: Неправильна форма зображення {img.shape}!"
+    indices = [0, 5, 10]
+    for idx in indices:
+        image, _ = dataset[idx]
+        assert image.shape == (3, 224, 224), f"Помилка: Неправильна форма зображення для індексу {idx}!"
