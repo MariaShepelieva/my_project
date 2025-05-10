@@ -1,0 +1,6 @@
+torch
+albumentations
+numpy
+opencv-python
+pytest
+rootutils

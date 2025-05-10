@@ -2,8 +2,6 @@ from pathlib import Path
 import cv2
 import torch
 from torch.utils.data import Dataset
-import numpy as np
-from src.augmentations import train_transforms
 
 
 class EyeDataset(Dataset):
@@ -34,34 +32,41 @@ class EyeDataset(Dataset):
         img_path = self.image_paths[idx]
         label = self.labels[idx]
 
-        image = cv2.imread(str(img_path))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
         image = cv2.resize(image, self.image_size)
 
         if self.transform:
             augmented = self.transform(image=image)
             image = augmented['image']
-        else:
 
-            image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
+        image = torch.tensor(image, dtype=torch.float32).unsqueeze(0) / 255.0
+        label = torch.tensor(label, dtype=torch.long)
 
-        return image, torch.tensor(label, dtype=torch.long)
+        label_ohe = torch.zeros(len(self.classes), dtype=torch.float32)
+        label_ohe[label] = 1.0
+
+        return {
+            "image": image, # (B, C, H, W)
+            "label": label, # (B, )
+            "label_ohe": label_ohe # (B, len(classes))
+        }
 
 
 
 if __name__ == "__main__":
-    dataset_path = Path(__file__).parent / "EyeDataset"
+    import os
+    dataset_path = Path(os.path.abspath(__file__)).parent.parent / "data"
     dataset = EyeDataset(root_dir=dataset_path, image_size=(224, 224))
    
     print(f"Кількість зображень в наборі: {len(dataset)}")
    
-    image, label = dataset[0]
-    print(f"Форма зображення: {image.shape} (Очікується: [3, 224, 224]), Клас: {label}")
+    image, label, label_ohe = dataset[0]["image"], dataset[0]["label"], dataset[0]["label_ohe"]
+    print(f"Форма зображення: {image.shape} (Очікується: [1, 224, 224]), Клас: {label}")
 
     from torch.utils.data import DataLoader
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
     batch = next(iter(dataloader))
-    images, labels = batch
-    print(f"Форма batch: {images.shape} (Очікується: [16, 3, 224, 224]), Классы: {labels}")
+    images, labels, labels_ohe = batch["image"], batch["label"], batch["label_ohe"]
+    print(f"Форма batch: {images.shape} (Очікується: [16, 1, 224, 224]), Классы: {labels}")
     print(dataset.classes)

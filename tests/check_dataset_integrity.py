@@ -13,7 +13,7 @@ import numpy as np
 
 from collections import Counter
 
-from src.work import EyeDataset
+from students.my_project.src.dataset import EyeDataset
 from src.augmentations import train_transforms
 
 
