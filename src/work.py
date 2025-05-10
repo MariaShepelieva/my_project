@@ -34,18 +34,19 @@ class EyeDataset(Dataset):
         img_path = self.image_paths[idx]
         label = self.labels[idx]
 
-        image = cv2.imread(str(img_path))  # OpenCV требует строку
+        image = cv2.imread(str(img_path))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, self.image_size)
-
-        image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
 
         if self.transform:
             augmented = self.transform(image=image)
             image = augmented['image']
+        else:
 
+            image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
 
         return image, torch.tensor(label, dtype=torch.long)
+
 
 
 if __name__ == "__main__":
