@@ -3,6 +3,7 @@ import cv2
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+from src.augmentations import train_transforms
 
 
 class EyeDataset(Dataset):
@@ -40,7 +41,9 @@ class EyeDataset(Dataset):
         image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
 
         if self.transform:
-            image = self.transform(image)
+            augmented = self.transform(image=image)
+            image = augmented['image']
+
 
         return image, torch.tensor(label, dtype=torch.long)
 
