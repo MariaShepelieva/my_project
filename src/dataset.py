@@ -32,23 +32,30 @@ class EyeDataset(Dataset):
         img_path = self.image_paths[idx]
         label = self.labels[idx]
 
+        # Load grayscale image as H x W
         image = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
         image = cv2.resize(image, self.image_size)
 
+        # Expand grayscale channel: H x W → H x W x 1
+        image = image[:, :, None]
+
         if self.transform:
             augmented = self.transform(image=image)
-            image = augmented['image']
+            image = augmented['image']  # Already a torch tensor with shape [1, H, W]
 
-        image = torch.tensor(image, dtype=torch.float32).unsqueeze(0) / 255.0
+        else:
+            # If no transforms, convert manually
+            image = image.astype('float32') / 255.0
+            image = torch.from_numpy(image).permute(2, 0, 1)  # (1, H, W)
+
         label = torch.tensor(label, dtype=torch.long)
-
         label_ohe = torch.zeros(len(self.classes), dtype=torch.float32)
         label_ohe[label] = 1.0
 
         return {
-            "image": image, # (B, C, H, W)
-            "label": label, # (B, )
-            "label_ohe": label_ohe # (B, len(classes))
+            "image": image,
+            "label": label,
+            "label_ohe": label_ohe
         }
 
 
@@ -68,5 +75,5 @@ if __name__ == "__main__":
 
     batch = next(iter(dataloader))
     images, labels, labels_ohe = batch["image"], batch["label"], batch["label_ohe"]
-    print(f"Форма batch: {images.shape} (Очікується: [16, 1, 224, 224]), Классы: {labels}")
+    print(f"Форма batch: {images.shape} (Очікується: [16, 1, 224, 224]), Класи: {labels}")
     print(dataset.classes)
