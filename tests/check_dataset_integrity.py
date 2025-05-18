@@ -13,7 +13,7 @@ import numpy as np
 
 from collections import Counter
 
-from students.my_project.src.dataset import EyeDataset
+from src.dataset import EyeDataset
 from src.augmentations import train_transforms
 
 
@@ -48,26 +48,29 @@ def check_images_readable(dataset):
 def preview_random_images(dataset):
     indices = np.random.choice(len(dataset), size=5, replace=False)
     for i in indices:
-        image, label = dataset[i]
-        
-        image = image.permute(1, 2, 0)
-        image = image * 0.5 + 0.5
+        sample = dataset[i]
+        image_tensor = sample["image"]  # Tensor: shape (1, H, W)
+        label = sample["label"]
 
-        plt.imshow(image.numpy())
-        plt.title(f"Label: {label}")
-        plt.axis('off')
-        plt.savefig(f'random_image_{i}.png') 
-        plt.close()
+        # Convert tensor to numpy and denormalize
+        image = image_tensor.squeeze().numpy()  
+        image = (image * 0.5 + 0.5) * 255 
+        image = np.clip(image, 0, 255).astype(np.uint8)
 
+    
+        label_text = dataset.classes[label.item()]
+        cv2.putText(image, label_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255), 2)
+
+        cv2.imwrite(f"preview_aug_{i}.png", image)
 
 
 
 if __name__ == "__main__":
-    dataset_path = Path(__file__).resolve().parent.parent / "src" / "EyeDataset"
+    dataset_path = Path(__file__).resolve().parent.parent / "data"
     dataset = EyeDataset(root_dir=dataset_path, image_size=(224, 224), transform=train_transforms)
 
-    print(f"Проверка набора данных: {dataset_path}")
-    print(f"Кол-во изображений: {len(dataset)}\n")
+    print(f"Перевірка набору даних: {dataset_path}")
+    print(f"Кількість зображень: {len(dataset)}\n")
 
     check_label_folder_alignment(dataset)
     check_class_distribution(dataset)

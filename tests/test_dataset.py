@@ -3,8 +3,9 @@ import torch
 from torch.utils.data import DataLoader
 from pathlib import Path
 import os
-
 import rootutils
+
+
 rootutils.setup_root(__file__, indicator=".git", pythonpath=True)
 
 from src.dataset import EyeDataset
@@ -32,7 +33,7 @@ def test_label_type(dataset):
     label = dataset[0]["label"]
     assert isinstance(label, torch.Tensor), "Помилка: Мітка не в форматі torch.Tensor!"
     assert label.dtype == torch.long, "Помилка: Мітка має бути типу torch.long!"
-    assert 0 <= label < len(dataset.classes), f"Помилка: Метка {label} виходить за діапазон класів!"
+    assert 0 <= label < len(dataset.classes), f"Помилка: Мітка {label} виходить за діапазон класів!"
 
 
 def test_dataloader(dataset):
