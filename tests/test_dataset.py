@@ -18,22 +18,22 @@ def dataset():
 
 
 def test_dataset_length(dataset):
-    assert len(dataset) > 0, "Помилка: Датасет порожній!"
+    assert len(dataset) > 0, "Error: Dataset is empty!"
 
 
 def test_image_shape(dataset):
     image, label, label_ohe = dataset[0]["image"], dataset[0]["label"], dataset[0]["label_ohe"]
-    assert isinstance(image, torch.Tensor), "Помилка: Зображення не в форматі torch.Tensor!"
-    assert image.shape == (1, 224, 224), f"Помилка: Очікується форма (1, 224, 224), але отримали {image.shape}!"
-    assert label_ohe.shape == (len(dataset.classes),), f"Помилка: Очікується форма ({len(dataset.classes)},), але отримали {label_ohe.shape}!"
-    assert label.dtype == torch.long, "Помилка: Мітка має бути типу torch.long!"
+    assert isinstance(image, torch.Tensor), "Error: Image is not a torch.Tensor!"
+    assert image.shape == (1, 224, 224), f"Error: Expected shape (1, 224, 224), but got {image.shape}!"
+    assert label_ohe.shape == (len(dataset.classes),), f"Error: Expected shape ({len(dataset.classes)},), but got {label_ohe.shape}!"
+    assert label.dtype == torch.long, "Error: Label must be of type torch.long!"
 
 
 def test_label_type(dataset):
     label = dataset[0]["label"]
-    assert isinstance(label, torch.Tensor), "Помилка: Мітка не в форматі torch.Tensor!"
-    assert label.dtype == torch.long, "Помилка: Мітка має бути типу torch.long!"
-    assert 0 <= label < len(dataset.classes), f"Помилка: Мітка {label} виходить за діапазон класів!"
+    assert isinstance(label, torch.Tensor), "Error: Label is not a torch.Tensor!"
+    assert label.dtype == torch.long, "Error: Label must be of type torch.long!"
+    assert 0 <= label < len(dataset.classes), f"Error: Label {label} is out of bounds for classes!"
 
 
 def test_dataloader(dataset):
@@ -41,12 +41,12 @@ def test_dataloader(dataset):
     batch = next(iter(dataloader))
     images, labels = batch["image"], batch["label"]
 
-    assert images.shape == (16, 1, 224, 224), f"Помилка: неправильна форма batch {images.shape}!"
-    assert labels.shape == (16,), f"Помилка: неправильна форма міток {labels.shape}!"
+    assert images.shape == (16, 1, 224, 224), f"Error: incorrect batch shape {images.shape}!"
+    assert labels.shape == (16,), f"Error: incorrect label shape {labels.shape}!"
 
 
 def test_multiple_images(dataset):
     indices = [0, 5, 10]
     for idx in indices:
         image = dataset[idx]["image"]
-        assert image.shape == (1, 224, 224), f"Помилка: Неправильна форма зображення для індексу {idx}!"
+        assert image.shape == (1, 224, 224), f"Error: Incorrect image shape for index {idx}!"

@@ -65,15 +65,15 @@ if __name__ == "__main__":
     dataset_path = Path(os.path.abspath(__file__)).parent.parent / "data"
     dataset = EyeDataset(root_dir=dataset_path, image_size=(224, 224))
    
-    print(f"Кількість зображень в наборі: {len(dataset)}")
+    print(f"Number of images in the set: {len(dataset)}")
    
     image, label, label_ohe = dataset[0]["image"], dataset[0]["label"], dataset[0]["label_ohe"]
-    print(f"Форма зображення: {image.shape} (Очікується: [1, 224, 224]), Клас: {label}")
+    print(f"Image shape: {image.shape} (Expected: [1, 224, 224]), Class: {label}")
 
     from torch.utils.data import DataLoader
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
     batch = next(iter(dataloader))
     images, labels, labels_ohe = batch["image"], batch["label"], batch["label_ohe"]
-    print(f"Форма batch: {images.shape} (Очікується: [16, 1, 224, 224]), Класи: {labels}")
+    print(f"Batch shape: {images.shape} (Expected: [16, 1, 224, 224]), Classes: {labels}")
     print(dataset.classes)
