@@ -19,7 +19,7 @@ from src.augmentations import train_transforms
 
 
 def check_label_folder_alignment(dataset):
-    print("Проверка соответствия меток и папок...")
+    print("Checking Label and Folder Matching...")
     for path, label in zip(dataset.image_paths, dataset.labels):
         folder_name = path.parent.name
         expected_label = dataset.classes.index(folder_name)
