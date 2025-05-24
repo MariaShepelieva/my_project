@@ -1,51 +1,88 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from pathlib import Path
+from torch.utils.data import DataLoader, random_split
+from torchvision import transforms
+from sklearn.metrics import classification_report
 
 from src.dataset import EyeDataset
 from src.model import EyeClassifierCNN
 from src.augmentations import train_transforms
 
-# Hyperparameters
-BATCH_SIZE = 16
-EPOCHS = 10
-LR = 0.001
-
-# Data
-data_path = Path("data")
-train_dataset = EyeDataset(data_path, image_size=(224, 224), transform=train_transforms)
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-
-# Model
+# Налаштування
+batch_size = 32
+num_epochs = 10
+learning_rate = 0.001
+val_split = 0.2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = EyeClassifierCNN(num_classes=len(train_dataset.classes)).to(device)
 
-# Training setup
+# Завантаження датасету
+dataset = EyeDataset(root_dir="data", image_size=(224, 224), transform=train_transforms)
+val_size = int(len(dataset) * val_split)
+train_size = len(dataset) - val_size
+train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+# Ініціалізація моделі
+num_classes = len(dataset.classes)
+model = EyeClassifierCNN(num_classes=num_classes).to(device)
+
+# Оптимізатор і функція втрат
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=LR)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-# Training loop
-for epoch in range(EPOCHS):
+best_val_loss = float('inf')
+
+# Навчання
+for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
-    correct = 0
-
     for batch in train_loader:
-        images = batch["image"].to(device)
-        labels = batch["label"].to(device)
-
-        outputs = model(images)
-        loss = criterion(outputs, labels)
+        images, labels = batch['image'].to(device), batch['label'].to(device)
 
         optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
         running_loss += loss.item()
-        _, preds = torch.max(outputs, 1)
-        correct += torch.sum(preds == labels).item()
 
-    acc = correct / len(train_dataset)
-    print(f"Epoch {epoch+1}/{EPOCHS}, Loss: {running_loss:.4f}, Accuracy: {acc:.4f}")
+    avg_train_loss = running_loss / len(train_loader)
+
+    # Валідація
+    model.eval()
+    val_loss = 0.0
+    correct = 0
+    total = 0
+    y_true = []
+    y_pred = []
+
+    with torch.no_grad():
+        for batch in val_loader:
+            images, labels = batch['image'].to(device), batch['label'].to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            val_loss += loss.item()
+
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+            y_true.extend(labels.cpu().numpy())
+            y_pred.extend(predicted.cpu().numpy())
+
+    avg_val_loss = val_loss / len(val_loader)
+    accuracy = 100 * correct / total
+
+    print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {accuracy:.2f}%")
+
+    if avg_val_loss < best_val_loss:
+        best_val_loss = avg_val_loss
+        torch.save(model.state_dict(), "checkpoints/best_model.pth")
+        print("Best model saved!")
+
+print("\nFinal Validation Report:")
+print(classification_report(y_true, y_pred, target_names=dataset.classes))

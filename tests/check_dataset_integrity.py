@@ -19,30 +19,30 @@ from src.augmentations import train_transforms
 
 
 def check_label_folder_alignment(dataset):
-    print("Проверка соответствия меток и папок...")
+    print("Checking Label and Folder Matching...")
     for path, label in zip(dataset.image_paths, dataset.labels):
         folder_name = path.parent.name
         expected_label = dataset.classes.index(folder_name)
-        assert label == expected_label, f"[ОШИБКА] {path}: ожидалась метка {expected_label}, получена {label}"
-    print("Все метки соответствуют папкам.\n")
+        assert label == expected_label, f"[ERROR] {path}: expected label {expected_label}, received {label}"
+    print("All labels correspond to folders.\n")
 
 
 def check_class_distribution(dataset):
-    print("Распределение классов:")
+    print("Class distribution:")
     counts = Counter(dataset.labels)
     for idx, count in counts.items():
         class_name = dataset.classes[idx]
-        print(f" - {class_name} ({idx}): {count} изображений")
+        print(f" - {class_name} ({idx}): {count} images")
     print()
 
 
 def check_images_readable(dataset):
-    print("Проверка целостности изображений...")
+    print("Checking image readability...")
     for path in dataset.image_paths:
         image = cv2.imread(str(path))
         if image is None:
-            print(f"[ОШИБКА] Не удалось прочитать изображение: {path}")
-    print("Проверка чтения изображений завершена.\n")
+            print(f"[ERROR] Could not read image: {path}")
+    print("Image readability check completed.\n")
 
 
 def preview_random_images(dataset):
@@ -69,8 +69,8 @@ if __name__ == "__main__":
     dataset_path = Path(__file__).resolve().parent.parent / "data"
     dataset = EyeDataset(root_dir=dataset_path, image_size=(224, 224), transform=train_transforms)
 
-    print(f"Перевірка набору даних: {dataset_path}")
-    print(f"Кількість зображень: {len(dataset)}\n")
+    print(f"Checking dataset: {dataset_path}")
+    print(f"Number of images: {len(dataset)}\n")
 
     check_label_folder_alignment(dataset)
     check_class_distribution(dataset)
