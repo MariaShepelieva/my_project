@@ -14,5 +14,3 @@ train_transforms = A.Compose([
 ])
 
 
-
-# valid_transforms = A.Compose([])
