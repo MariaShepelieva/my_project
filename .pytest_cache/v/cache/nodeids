@@ -1,0 +1,7 @@
+[
+  "tests/test_dataset.py::test_dataloader",
+  "tests/test_dataset.py::test_dataset_length",
+  "tests/test_dataset.py::test_image_shape",
+  "tests/test_dataset.py::test_label_type",
+  "tests/test_dataset.py::test_multiple_images"
+]
