@@ -6,6 +6,7 @@ train_transforms = A.Compose([
         A.MotionBlur(blur_limit=3),
         A.MedianBlur(blur_limit=3)
     ], p=0.2),
+    A.Resize(224, 224),
     A.OpticalDistortion(distort_limit=0.02, p=0.2),
     A.GaussNoise(p=0.1),
     A.CoarseDropout(p=0.1),

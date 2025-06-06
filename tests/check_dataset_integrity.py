@@ -5,7 +5,6 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(project_root))
 
 import cv2
-import torch
 import matplotlib
 matplotlib.use('Agg')  
 import matplotlib.pyplot as plt
@@ -45,7 +44,8 @@ def check_images_readable(dataset):
     print("Image readability check completed.\n")
 
 
-def preview_random_images(dataset):
+def preview_random_images(dataset, save_dir):
+    save_dir.mkdir(parents=True, exist_ok=True)
     indices = np.random.choice(len(dataset), size=5, replace=False)
     for i in indices:
         sample = dataset[i]
@@ -60,13 +60,14 @@ def preview_random_images(dataset):
     
         label_text = dataset.classes[label.item()]
         cv2.putText(image, label_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255), 2)
-
-        cv2.imwrite(f"preview_aug_{i}.png", image)
+        save_path = save_dir / f"preview_aug_{i}.png"
+        cv2.imwrite(str(save_path), image)
 
 
 
 if __name__ == "__main__":
     dataset_path = Path(__file__).resolve().parent.parent / "data"
+    preview_dir = Path(__file__).resolve().parent.parent / "preview"
     dataset = EyeDataset(root_dir=dataset_path, image_size=(224, 224), transform=train_transforms)
 
     print(f"Checking dataset: {dataset_path}")
@@ -75,4 +76,4 @@ if __name__ == "__main__":
     check_label_folder_alignment(dataset)
     check_class_distribution(dataset)
     check_images_readable(dataset)
-    preview_random_images(dataset)
+    preview_random_images(dataset, preview_dir)
