@@ -40,10 +40,20 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 best_val_loss = float('inf')
 
+train_losses = []
+val_losses = []
+train_accuracies = []
+val_accuracies = []
+
+
 
 for epoch in range(num_epochs):
+    # ======== TRAINING ========
     model.train()
     running_loss = 0.0
+    correct_train = 0
+    total_train = 0
+
     for batch in train_loader:
         images, labels = batch['image'].to(device), batch['label'].to(device)
 
@@ -55,9 +65,16 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item()
 
+        _, predicted = torch.max(outputs, 1)
+        total_train += labels.size(0)
+        correct_train += (predicted == labels).sum().item()
+
     avg_train_loss = running_loss / len(train_loader)
+    train_accuracy = 100 * correct_train / total_train
+    train_losses.append(avg_train_loss)
+    train_accuracies.append(train_accuracy)
 
-
+    # ======== VALIDATION ========
     model.eval()
     val_loss = 0.0
     correct = 0
@@ -80,14 +97,19 @@ for epoch in range(num_epochs):
             y_pred.extend(predicted.cpu().numpy())
 
     avg_val_loss = val_loss / len(val_loader)
-    accuracy = 100 * correct / total
+    val_accuracy = 100 * correct / total
+    val_losses.append(avg_val_loss)
+    val_accuracies.append(val_accuracy)
 
-    print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {accuracy:.2f}%")
+    print(f"Epoch [{epoch+1}/{num_epochs}], "
+          f"Train Loss: {avg_train_loss:.4f}, Train Acc: {train_accuracy:.2f}%, "
+          f"Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.2f}%")
 
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
         torch.save(model.state_dict(), "checkpoints/best_model.pth")
         print("Best model saved!")
+
 
 
 
@@ -97,6 +119,34 @@ print(classification_report(y_true, y_pred, target_names=dataset.classes))
 
 cm = confusion_matrix(y_true, y_pred)
 cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] 
+
+# Plot losses and accuracies
+epochs = range(1, num_epochs + 1)
+
+plt.figure(figsize=(12, 5))
+
+# Loss plot
+plt.subplot(1, 2, 1)
+plt.plot(epochs, train_losses, label='Train Loss')
+plt.plot(epochs, val_losses, label='Val Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Loss per Epoch')
+plt.legend()
+
+# Accuracy plot
+plt.subplot(1, 2, 2)
+plt.plot(epochs, train_accuracies, label='Train Acc')
+plt.plot(epochs, val_accuracies, label='Val Acc')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy (%)')
+plt.title('Accuracy per Epoch')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig("training_curves.png")
+print("Training curves saved as training_curves.png")
+
 
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm_normalized, annot=True, fmt=".2f", cmap="Blues", xticklabels=dataset.classes, yticklabels=dataset.classes)
